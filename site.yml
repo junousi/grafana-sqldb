@@ -1,0 +1,57 @@
+---
+- hosts: all
+  become: yes
+  become_user: root
+  tasks:
+
+  - name: Install prereqs
+    apt: 
+      name: "{{ item }}"
+      update_cache: yes
+    with_items:
+      - collectd
+      - screen
+  - name: Copy colletcd.conf
+    copy:
+      src: files/collectd.conf
+      dest: /etc/collectd/collectd.conf
+      owner: root
+      group: root
+      mode: 0644
+
+  - name: Retrieve influx
+    shell: wget https://dl.influxdata.com/influxdb/releases/influxdb_1.2.0_amd64.deb
+    args:
+      creates: influxdb_1.2.0_amd64.deb
+  - name: Install influx
+    shell: dpkg -i influxdb_1.2.0_amd64.deb 
+  - name: Insert colletcd config into influx
+    blockinfile:
+      dest: /etc/influxdb/influxdb.conf
+      insertafter: "[[collectd]]"
+      content: |
+        enabled = true
+        bind-address = "127.0.0.1:25826"
+        database = "collectd"
+        typesdb = "/usr/share/collectd/types.db"
+
+  - name: Restarts (to notify later)
+    shell: "sudo service {{ item }} restart"
+    with_items: 
+      - influxdb
+      - collectd
+
+  - name: Retrieve and extract Grafana binary with SQL datasource support
+    become: no
+    unarchive:
+      src: https://github.com/sraoss/grafana-sqldb-datasource/releases/download/V0.1/grafana-sqldb_20160615.tar.gz
+      dest: "{{ lookup('env','HOME') }}"
+      remote_src: True
+      creates: "{{ lookup('env','HOME') }}/grafana-sqldb"
+
+  - name: Screen hack
+    shell: 'touch /tmp/screen-in-use; screen -S test -d -m bin/grafana-server'
+    become: no
+    args:
+      chdir: grafana-sqldb/
+      creates: /tmp/screen-in-use
