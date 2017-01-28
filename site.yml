@@ -45,9 +45,9 @@
     become: no
     unarchive:
       src: https://github.com/sraoss/grafana-sqldb-datasource/releases/download/V0.1/grafana-sqldb_20160615.tar.gz
-      dest: "{{ lookup('env','HOME') }}"
+      dest: "/home/{{ ansible_user }}"
       remote_src: True
-      creates: "{{ lookup('env','HOME') }}/grafana-sqldb"
+      creates: "/home/{{ ansible_user }}/grafana-sqldb"
 
   - name: Screen hack
     shell: 'touch /tmp/screen-in-use; screen -S test -d -m bin/grafana-server'
