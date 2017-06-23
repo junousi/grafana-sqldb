@@ -46,9 +46,9 @@
     become: no
     unarchive:
       src: https://github.com/sraoss/grafana-sqldb-datasource/releases/download/V0.1/grafana-sqldb_20160615.tar.gz
-      dest: "/home/{{ ansible_user }}"
+      dest: "{{ ansible_env.HOME }}"
       remote_src: True
-      creates: "/home/{{ ansible_user }}/grafana-sqldb"
+      creates: "{{ ansible_env.HOME }}/grafana-sqldb"
 
   - name: Start into screen for now
     shell: 'touch /tmp/screen-in-use; screen -S test -d -m bin/grafana-server'
