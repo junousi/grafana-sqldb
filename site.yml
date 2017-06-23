@@ -35,8 +35,9 @@
         database = "collectd"
         typesdb = "/usr/share/collectd/types.db"
 
-  - name: Restarts (to notify later)
-    shell: "sudo service {{ item }} restart"
+  - name: Try to restart services
+    shell: "service {{ item }} restart"
+    ignore_errors: true
     with_items: 
       - influxdb
       - collectd
@@ -49,7 +50,7 @@
       remote_src: True
       creates: "/home/{{ ansible_user }}/grafana-sqldb"
 
-  - name: Screen hack
+  - name: Start into screen for now
     shell: 'touch /tmp/screen-in-use; screen -S test -d -m bin/grafana-server'
     become: no
     args:
